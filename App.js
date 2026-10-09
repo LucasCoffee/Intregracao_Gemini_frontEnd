@@ -13,7 +13,57 @@ import {
 
 // Troque pelo IP do seu computador na rede (ipconfig no Windows).
 // O celular e o computador precisam estar no mesmo Wi-Fi.
-const API_URL = 'http://localhost:5050/';
+const API_URL = 'http://localhost:5050';
+
+function TextoComNegrito({ texto, style }) {
+  const partes = texto.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <Text style={style}>
+      {partes.map((parte, i) =>
+        parte.startsWith('**') && parte.endsWith('**') ? (
+          <Text key={i} style={styles.negrito}>
+            {parte.slice(2, -2)}
+          </Text>
+        ) : (
+          parte
+        )
+      )}
+    </Text>
+  );
+}
+
+function RespostaFormatada({ markdown }) {
+  const linhas = markdown.split('\n');
+
+  return (
+    <View style={styles.resposta}>
+      {linhas.map((linha, i) => {
+        const l = linha.trim();
+
+        if (!l || /^-{3,}$/.test(l)) return null;
+
+        if (l.startsWith('### ')) {
+          return <TextoComNegrito key={i} texto={l.slice(4)} style={styles.subtitulo} />;
+        }
+
+        if (l.startsWith('## ') || l.startsWith('# ')) {
+          return <TextoComNegrito key={i} texto={l.replace(/^#+ /, '')} style={styles.secao} />;
+        }
+
+        if (/^[-*] /.test(l)) {
+          return (
+            <View key={i} style={styles.itemLista}>
+              <Text style={styles.respostaTexto}>•</Text>
+              <TextoComNegrito texto={l.slice(2)} style={[styles.respostaTexto, styles.itemTexto]} />
+            </View>
+          );
+        }
+
+        return <TextoComNegrito key={i} texto={l} style={styles.respostaTexto} />;
+      })}
+    </View>
+  );
+}
 
 export default function App() {
   const [assunto, setAssunto] = useState('');
@@ -109,7 +159,7 @@ export default function App() {
         <View style={styles.cartao}>
           <Text style={styles.tituloResposta}>Resposta</Text>
           {resposta ? (
-            <Text style={styles.respostaTexto}>{resposta}</Text>
+            <RespostaFormatada markdown={resposta} />
           ) : (
             <Text style={styles.vazio}>O resultado vai aparecer aqui.</Text>
           )}
@@ -197,6 +247,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     color: '#14213d',
+  },
+  resposta: {
+    gap: 6,
+  },
+  secao: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2f4bff',
+    marginTop: 12,
+  },
+  subtitulo: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#14213d',
+    marginTop: 6,
+  },
+  itemLista: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  itemTexto: {
+    flex: 1,
+  },
+  negrito: {
+    fontWeight: '700',
   },
   vazio: {
     fontSize: 15,
